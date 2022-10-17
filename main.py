@@ -7,8 +7,17 @@ from discord.ext import commands
 
 import config
 
-def toz(token):
-    asyncio.set_event_loop(asyncio.new_event_loop())
+tokens = config.get_tokens()
+
+clients = []
+
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
+
+# loop = asyncio.get_event_loop()
+
+for i, token in enumerate(tokens):
+    # print(f'I: {i}, K: {token.token}')
     client = commands.Bot(command_prefix=':', self_bot=True, help_command=None)
     @client.event
     async def on_ready():
@@ -26,16 +35,13 @@ def toz(token):
             await client.change_presence(status=discord.Status(status), activity=None)
 
         print(f"As {client.user} ({client.user.id}). Joined {vc.name} ({vc.id}).")
-    client.run(token.token)
+    
+    loop.create_task(client.start(token.token))
+    # client.start(token.token)
 
-tokens = config.get_tokens()
+    clients.append(client)
 
-clients = []
-
-for i, token in enumerate(tokens):
-    # print(f'I: {i}, K: {token}')
-    clients.append(threading.Thread(target=toz, args=(token,)))
-    clients[i].start()
+loop.run_forever()
 
 while True:
     if input() == 'exit':
